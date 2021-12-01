@@ -3,7 +3,7 @@ package com.soulje.dictionary.view.main
 import com.soulje.dictionary.model.data.AppState
 import com.soulje.dictionary.model.data.DataModel
 import com.soulje.dictionary.model.repository.Repository
-import com.soulje.dictionary.presenter.Interactor
+import com.soulje.dictionary.view.Interactor
 import io.reactivex.Observable
 
 class MainInteractor(

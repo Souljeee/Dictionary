@@ -15,17 +15,13 @@ import com.soulje.dictionary.model.data.DataModel
 import com.soulje.dictionary.view.base.BaseActivity
 import com.soulje.dictionary.view.main.adapter.MainAdapter
 import com.soulje.dictionary.viewModel.MainViewModel
-import dagger.android.AndroidInjection
-import javax.inject.Inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : BaseActivity<AppState>() {
 
     private lateinit var binding: ActivityMainBinding
 
-    @Inject
-    internal lateinit var viewModelFactory: ViewModelProvider.Factory
-
-    override lateinit var model: MainViewModel
+    override val model: MainViewModel by viewModel()
 
 
     private var adapter: MainAdapter? = null
@@ -38,11 +34,9 @@ class MainActivity : BaseActivity<AppState>() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        model = viewModelFactory.create(MainViewModel::class.java)
         model.subscribe().observe(this@MainActivity, Observer<AppState> { renderData(it) })
         binding.searchFab.setOnClickListener {
             val searchDialogFragment = SearchDialogFragment.newInstance()

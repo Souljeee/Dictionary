@@ -2,6 +2,7 @@ package com.soulje.dictionary.viewModel
 
 import androidx.lifecycle.LiveData
 import com.soulje.dictionary.model.data.AppState
+import com.soulje.dictionary.model.data.DataModel
 import com.soulje.dictionary.model.datasource.DataSourceLocal
 import com.soulje.dictionary.model.datasource.DataSourceRemote
 import com.soulje.dictionary.model.repository.RepositoryImplementation
@@ -31,6 +32,14 @@ class MainViewModel(private val interactor: MainInteractor) :
         viewModelCoroutineScope.launch { startInteractor(word, isOnline) }
     }
 
+    fun getDataByWord(word: String) {
+        _mutableLiveData.value = AppState.Loading(null)
+        viewModelCoroutineScope.launch { startInteractorByWord(word) }
+    }
+
+    private suspend fun startInteractorByWord(word:String) = withContext(Dispatchers.IO){
+        _mutableLiveData.postValue(interactor.getDataByWord(word))
+    }
     private suspend fun startInteractor(word: String, isOnline: Boolean) = withContext(Dispatchers.IO) {
         _mutableLiveData.postValue(interactor.getData(word, isOnline))
     }

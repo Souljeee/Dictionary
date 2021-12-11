@@ -1,9 +1,15 @@
 package com.soulje.dictionary.view.main
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Toast
+import androidx.core.content.ContextCompat.startActivity
+import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,22 +19,27 @@ import com.soulje.dictionary.databinding.ActivityMainBinding
 import com.soulje.dictionary.model.data.AppState
 import com.soulje.dictionary.model.data.DataModel
 import com.soulje.dictionary.view.base.BaseActivity
+import com.soulje.dictionary.view.details.DetailsActivity
+import com.soulje.dictionary.view.history.HistoryActivity
 import com.soulje.dictionary.view.main.adapter.MainAdapter
 import com.soulje.dictionary.viewModel.MainViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.qualifier.named
 
 class MainActivity : BaseActivity<AppState>() {
 
     private lateinit var binding: ActivityMainBinding
 
-    override val model: MainViewModel by viewModel()
+    override val model: MainViewModel by viewModel(named("main"))
+
+    private lateinit var answer : String
 
 
-    private var adapter: MainAdapter? = null
+    private lateinit var adapter: MainAdapter
     private val onListItemClickListener: MainAdapter.OnListItemClickListener =
         object : MainAdapter.OnListItemClickListener {
             override fun onItemClick(data: DataModel) {
-                Toast.makeText(this@MainActivity, data.text, Toast.LENGTH_SHORT).show()
+                openDetails(data)
             }
         }
 
@@ -50,69 +61,77 @@ class MainActivity : BaseActivity<AppState>() {
         }
     }
 
-    override fun renderData(appState: AppState) {
+    private fun renderData(appState: AppState) {
         when (appState) {
             is AppState.Success -> {
-                val dataModel = appState.data
-                if (dataModel == null || dataModel.isEmpty()) {
-                    showErrorScreen(getString(R.string.empty_server_response_on_success))
-                } else {
-                    showViewSuccess()
-                    if (adapter == null) {
-                        binding.mainActivityRecyclerview.layoutManager =
-                            LinearLayoutManager(applicationContext)
-                        binding.mainActivityRecyclerview.adapter =
-                            MainAdapter(onListItemClickListener, dataModel)
+                showViewWorking()
+                appState.data?.let {
+                    if (it.isEmpty()) {
+                        Log.d("tag", "пусто")
                     } else {
-                        adapter!!.setData(dataModel)
+                        setDataToAdapter(it)
                     }
                 }
             }
             is AppState.Loading -> {
                 showViewLoading()
-                if (appState.progress != null) {
-                    binding.progressBarHorizontal.visibility = VISIBLE
-                    binding.progressBarRound.visibility = GONE
-                    binding.progressBarHorizontal.progress = appState.progress
-                } else {
-                    binding.progressBarHorizontal.visibility = GONE
-                    binding.progressBarRound.visibility = VISIBLE
-                }
             }
             is AppState.Error -> {
-                showErrorScreen(appState.error.message)
+                showViewWorking()
             }
+            is AppState.SearchSuccess ->{
+                appState.data?.let {
+                    openDetails(it)
+                }            }
         }
     }
 
-    private fun showErrorScreen(error: String?) {
-        showViewError()
-        binding.errorTextview.text = error ?: getString(R.string.undefined_error)
-        binding.reloadButton.setOnClickListener {
-            model.getData("hi", true)
+    private fun openDetails(data: DataModel) {
+        val intent = Intent(this@MainActivity,DetailsActivity::class.java)
+            .putExtra("IMAGE_URL",data.meanings!![0].imageUrl)
+            .putExtra("TEXT",data.text)
+            .putExtra("TRANSLATION", data.meanings[0].translation!!.translation)
+        startActivity(intent)
+    }
+
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.history_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_history -> {
+                startActivity(Intent(this, HistoryActivity::class.java))
+                true
+            }
+            R.id.menu_search -> {
+                val dlgFragment : DialogFragment = SearchDataBaseDialog()
+                dlgFragment.show(supportFragmentManager,"tag")
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun showViewSuccess() {
-        binding.successLinearLayout.visibility = VISIBLE
-        binding.loadingFrameLayout.visibility = GONE
-        binding.errorLinearLayout.visibility = GONE
-    }
-
-    private fun showViewLoading() {
-        binding.successLinearLayout.visibility = GONE
-        binding.loadingFrameLayout.visibility = VISIBLE
-        binding.errorLinearLayout.visibility = GONE
-    }
-
-    private fun showViewError() {
-        binding.successLinearLayout.visibility = GONE
-        binding.loadingFrameLayout.visibility = GONE
-        binding.errorLinearLayout.visibility = VISIBLE
+    fun onDialogResult(resultDialog: String) {
+        answer = resultDialog
+        model.getDataByWord(answer)
     }
 
     companion object {
         private const val BOTTOM_SHEET_FRAGMENT_DIALOG_TAG =
             "74a54328-5d62-46bf-ab6b-cbf5fgt0-092395"
     }
+
+    override fun setDataToAdapter(data: List<DataModel>) = with(binding) {
+        adapter = MainAdapter(onListItemClickListener,data)
+        adapter.setData(data)
+        mainActivityRecyclerview.layoutManager = LinearLayoutManager(this@MainActivity)
+        mainActivityRecyclerview.adapter = adapter
+        mainActivityRecyclerview.setHasFixedSize(true)
+
+    }
+
 }

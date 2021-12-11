@@ -1,35 +1,51 @@
 package com.soulje.dictionary.model.di
 
+import androidx.room.Room
+import com.soulje.dictionary.db.HistoryDataBase
 import com.soulje.dictionary.model.data.DataModel
 import com.soulje.dictionary.model.datasource.DataSource
 import com.soulje.dictionary.model.datasource.RetrofitImplementation
 import com.soulje.dictionary.model.datasource.RoomDataBaseImplementation
 import com.soulje.dictionary.model.repository.Repository
 import com.soulje.dictionary.model.repository.RepositoryImplementation
+import com.soulje.dictionary.model.repository.RepositoryImplementationLocal
+import com.soulje.dictionary.model.repository.RepositoryLocal
+import com.soulje.dictionary.view.history.HistoryInteractor
 import com.soulje.dictionary.view.main.MainInteractor
+import com.soulje.dictionary.viewModel.HistoryViewModel
 import com.soulje.dictionary.viewModel.MainViewModel
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val appModule = module {
 
-    single<DataSource<List<DataModel>>>(named(NAME_REMOTE)) { RetrofitImplementation() }
+    single { Room.databaseBuilder(androidContext(), HistoryDataBase::class.java, "HistoryDB").fallbackToDestructiveMigration().build() }
+    single { get<HistoryDataBase>().historyDao() }
 
-    single<DataSource<List<DataModel>>>(named(NAME_LOCAL)) { RoomDataBaseImplementation() }
+    single<Repository<List<DataModel>>> { RepositoryImplementation(RetrofitImplementation()) }
 
-    single<Repository<List<DataModel>>>(named(NAME_REMOTE)) { RepositoryImplementation(get(named(NAME_REMOTE))) }
+    single<RepositoryLocal<List<DataModel>>> { RepositoryImplementationLocal(RoomDataBaseImplementation(get())) }
 
-    single<Repository<List<DataModel>>>(named(NAME_LOCAL)) {
-        RepositoryImplementation(get(named(NAME_LOCAL)))
-    }
 
-    single{
+
+
+    single(named("main")){
         MainInteractor(
-            remoteRepository = get(named(NAME_REMOTE)),
-            localRepository = get(named(NAME_LOCAL))
+            repositoryRemote = get(),
+            repositoryLocal = get()
         )
     }
 
-    viewModel { MainViewModel(get()) }
+    single(named("history")){
+        HistoryInteractor(
+            repositoryRemote = get(),
+            repositoryLocal = get()
+        )
+    }
+
+    viewModel(named("main")) { MainViewModel(get(named("main"))) }
+
+    viewModel(named("history")) { HistoryViewModel(get(named("history"))) }
 }

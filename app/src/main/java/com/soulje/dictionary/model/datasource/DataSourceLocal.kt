@@ -1,10 +1,12 @@
 package com.soulje.dictionary.model.datasource
 
+import com.soulje.dictionary.model.data.AppState
 import com.soulje.dictionary.model.data.DataModel
 import io.reactivex.Observable
 
-class DataSourceLocal(private val localProvider: RoomDataBaseImplementation = RoomDataBaseImplementation()) :
-    DataSource<List<DataModel>> {
+interface DataSourceLocal<T> : DataSource<T> {
 
-    override suspend fun getData(word: String): List<DataModel> = localProvider.getData(word)
+    suspend fun saveToDB(appState: AppState)
+
+    suspend fun getDataByWord(word:String): DataModel
 }

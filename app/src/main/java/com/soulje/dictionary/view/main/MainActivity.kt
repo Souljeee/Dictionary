@@ -5,28 +5,24 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View.GONE
-import android.view.View.VISIBLE
-import android.widget.Toast
 import androidx.core.content.ContextCompat.startActivity
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.soulje.dictionary.R
 import com.soulje.dictionary.SearchDialogFragment
 import com.soulje.dictionary.databinding.ActivityMainBinding
-import com.soulje.dictionary.model.data.AppState
-import com.soulje.dictionary.model.data.DataModel
-import com.soulje.dictionary.view.base.BaseActivity
+import com.soulje.core.AppState
+import com.soulje.model.DataModel
+import com.soulje.core.BaseActivity
 import com.soulje.dictionary.view.details.DetailsActivity
-import com.soulje.dictionary.view.history.HistoryActivity
+import com.soulje.historyscreen.HistoryActivity
 import com.soulje.dictionary.view.main.adapter.MainAdapter
 import com.soulje.dictionary.viewModel.MainViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.qualifier.named
 
-class MainActivity : BaseActivity<AppState>() {
+class MainActivity : com.soulje.core.BaseActivity<com.soulje.core.AppState>() {
 
     private lateinit var binding: ActivityMainBinding
 
@@ -38,7 +34,7 @@ class MainActivity : BaseActivity<AppState>() {
     private lateinit var adapter: MainAdapter
     private val onListItemClickListener: MainAdapter.OnListItemClickListener =
         object : MainAdapter.OnListItemClickListener {
-            override fun onItemClick(data: DataModel) {
+            override fun onItemClick(data: com.soulje.model.DataModel) {
                 openDetails(data)
             }
         }
@@ -48,7 +44,7 @@ class MainActivity : BaseActivity<AppState>() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        model.subscribe().observe(this@MainActivity, Observer<AppState> { renderData(it) })
+        model.subscribe().observe(this@MainActivity, Observer<com.soulje.core.AppState> { renderData(it) })
         binding.searchFab.setOnClickListener {
             val searchDialogFragment = SearchDialogFragment.newInstance()
             searchDialogFragment.setOnSearchClickListener(object :
@@ -61,9 +57,9 @@ class MainActivity : BaseActivity<AppState>() {
         }
     }
 
-    private fun renderData(appState: AppState) {
+    private fun renderData(appState: com.soulje.core.AppState) {
         when (appState) {
-            is AppState.Success -> {
+            is com.soulje.core.AppState.Success -> {
                 showViewWorking()
                 appState.data?.let {
                     if (it.isEmpty()) {
@@ -73,24 +69,24 @@ class MainActivity : BaseActivity<AppState>() {
                     }
                 }
             }
-            is AppState.Loading -> {
+            is com.soulje.core.AppState.Loading -> {
                 showViewLoading()
             }
-            is AppState.Error -> {
+            is com.soulje.core.AppState.Error -> {
                 showViewWorking()
             }
-            is AppState.SearchSuccess ->{
+            is com.soulje.core.AppState.SearchSuccess ->{
                 appState.data?.let {
                     openDetails(it)
                 }            }
         }
     }
 
-    private fun openDetails(data: DataModel) {
+    private fun openDetails(data: com.soulje.model.DataModel) {
         val intent = Intent(this@MainActivity,DetailsActivity::class.java)
             .putExtra("IMAGE_URL",data.meanings!![0].imageUrl)
             .putExtra("TEXT",data.text)
-            .putExtra("TRANSLATION", data.meanings[0].translation!!.translation)
+            .putExtra("TRANSLATION", data.meanings!![0].translation!!.translation)
         startActivity(intent)
     }
 
@@ -103,7 +99,7 @@ class MainActivity : BaseActivity<AppState>() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_history -> {
-                startActivity(Intent(this, HistoryActivity::class.java))
+                startActivity(Intent(this, com.soulje.historyscreen.HistoryActivity::class.java))
                 true
             }
             R.id.menu_search -> {
@@ -125,7 +121,7 @@ class MainActivity : BaseActivity<AppState>() {
             "74a54328-5d62-46bf-ab6b-cbf5fgt0-092395"
     }
 
-    override fun setDataToAdapter(data: List<DataModel>) = with(binding) {
+    override fun setDataToAdapter(data: List<com.soulje.model.DataModel>) = with(binding) {
         adapter = MainAdapter(onListItemClickListener,data)
         adapter.setData(data)
         mainActivityRecyclerview.layoutManager = LinearLayoutManager(this@MainActivity)

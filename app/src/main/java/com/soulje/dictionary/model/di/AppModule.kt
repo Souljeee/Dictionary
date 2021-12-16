@@ -1,19 +1,16 @@
 package com.soulje.dictionary.model.di
 
 import androidx.room.Room
-import com.soulje.dictionary.db.HistoryDataBase
-import com.soulje.dictionary.model.data.DataModel
-import com.soulje.dictionary.model.datasource.DataSource
-import com.soulje.dictionary.model.datasource.RetrofitImplementation
-import com.soulje.dictionary.model.datasource.RoomDataBaseImplementation
-import com.soulje.dictionary.model.repository.Repository
-import com.soulje.dictionary.model.repository.RepositoryImplementation
-import com.soulje.dictionary.model.repository.RepositoryImplementationLocal
-import com.soulje.dictionary.model.repository.RepositoryLocal
-import com.soulje.dictionary.view.history.HistoryInteractor
+
 import com.soulje.dictionary.view.main.MainInteractor
-import com.soulje.dictionary.viewModel.HistoryViewModel
 import com.soulje.dictionary.viewModel.MainViewModel
+import com.soulje.model.DataModel
+import com.soulje.repository.datasource.RetrofitImplementation
+import com.soulje.repository.datasource.RoomDataBaseImplementation
+import com.soulje.repository.repos.Repository
+import com.soulje.repository.repos.RepositoryImplementation
+import com.soulje.repository.repos.RepositoryImplementationLocal
+import com.soulje.repository.repos.RepositoryLocal
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -21,12 +18,22 @@ import org.koin.dsl.module
 
 val appModule = module {
 
-    single { Room.databaseBuilder(androidContext(), HistoryDataBase::class.java, "HistoryDB").fallbackToDestructiveMigration().build() }
-    single { get<HistoryDataBase>().historyDao() }
+    single { Room.databaseBuilder(androidContext(), com.soulje.repository.db.HistoryDataBase::class.java, "HistoryDB").fallbackToDestructiveMigration().build() }
+    single { get<com.soulje.repository.db.HistoryDataBase>().historyDao() }
 
-    single<Repository<List<DataModel>>> { RepositoryImplementation(RetrofitImplementation()) }
+    single<Repository<List<DataModel>>> {
+        RepositoryImplementation(
+            RetrofitImplementation()
+        )
+    }
 
-    single<RepositoryLocal<List<DataModel>>> { RepositoryImplementationLocal(RoomDataBaseImplementation(get())) }
+    single<RepositoryLocal<List<DataModel>>> {
+        RepositoryImplementationLocal(
+            RoomDataBaseImplementation(
+                get()
+            )
+        )
+    }
 
 
 
@@ -39,7 +46,7 @@ val appModule = module {
     }
 
     single(named("history")){
-        HistoryInteractor(
+        com.soulje.historyscreen.HistoryInteractor(
             repositoryRemote = get(),
             repositoryLocal = get()
         )
@@ -47,5 +54,5 @@ val appModule = module {
 
     viewModel(named("main")) { MainViewModel(get(named("main"))) }
 
-    viewModel(named("history")) { HistoryViewModel(get(named("history"))) }
+    viewModel(named("history")) { com.soulje.historyscreen.HistoryViewModel(get(named("history"))) }
 }

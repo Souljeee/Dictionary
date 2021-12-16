@@ -1,29 +1,28 @@
 package com.soulje.dictionary.view.main
 
-import com.soulje.dictionary.model.data.AppState
-import com.soulje.dictionary.model.data.DataModel
-import com.soulje.dictionary.model.repository.Repository
-import com.soulje.dictionary.model.repository.RepositoryLocal
-import com.soulje.dictionary.view.Interactor
-import io.reactivex.Observable
+import com.soulje.core.AppState
+import com.soulje.model.DataModel
+import com.soulje.core.Interactor
+import com.soulje.repository.repos.Repository
+import com.soulje.repository.repos.RepositoryLocal
 
 class MainInteractor(
     private val repositoryRemote: Repository<List<DataModel>>,
     private val repositoryLocal: RepositoryLocal<List<DataModel>>
-) : Interactor<AppState> {
+) : com.soulje.core.Interactor<com.soulje.core.AppState> {
 
-    override suspend fun getData(word: String, fromRemoteSource: Boolean): AppState {
-        val appState: AppState
+    override suspend fun getData(word: String, fromRemoteSource: Boolean): com.soulje.core.AppState {
+        val appState: com.soulje.core.AppState
         if (fromRemoteSource) {
-            appState = AppState.Success(repositoryRemote.getData(word))
+            appState = com.soulje.core.AppState.Success(repositoryRemote.getData(word))
             repositoryLocal.saveToDB(appState)
         } else {
-            appState = AppState.Success(repositoryLocal.getData(word))
+            appState = com.soulje.core.AppState.Success(repositoryLocal.getData(word))
         }
         return appState
     }
 
-    override suspend fun getDataByWord(word: String): AppState {
-        return AppState.SearchSuccess(repositoryLocal.getDataByWord(word))
+    override suspend fun getDataByWord(word: String): com.soulje.core.AppState {
+        return com.soulje.core.AppState.SearchSuccess(repositoryLocal.getDataByWord(word))
     }
 }

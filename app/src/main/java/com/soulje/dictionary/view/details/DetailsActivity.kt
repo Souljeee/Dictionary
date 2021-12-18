@@ -1,10 +1,13 @@
 package com.soulje.dictionary.view.details
 
 import android.content.Intent
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
+import androidx.annotation.RequiresApi
 import coil.ImageLoader
 import coil.request.LoadRequest
 import coil.transform.CircleCropTransformation
@@ -16,6 +19,7 @@ class DetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailsBinding
 
+    @RequiresApi(31)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDetailsBinding.inflate(layoutInflater)
@@ -30,6 +34,7 @@ class DetailsActivity : AppCompatActivity() {
         useCoilToLoadPhoto(binding.wordImage,imageUrl)
     }
 
+    @RequiresApi(31)
     private fun useCoilToLoadPhoto(imageView: ImageView, imageLink: String) {
         val request = LoadRequest.Builder(this)
             .data("https:$imageLink")
@@ -46,7 +51,8 @@ class DetailsActivity : AppCompatActivity() {
 //                CircleCropTransformation(),
 //            )
             .build()
-
+        val blurEffect = RenderEffect.createBlurEffect(16f, 16f, Shader.TileMode.MIRROR)
+        imageView.setRenderEffect(blurEffect)
         ImageLoader(this).execute(request)
     }
 }

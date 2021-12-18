@@ -1,9 +1,12 @@
 package com.soulje.dictionary.model.di
 
 import androidx.room.Room
+import com.soulje.dictionary.view.main.MainActivity
 
 import com.soulje.dictionary.view.main.MainInteractor
 import com.soulje.dictionary.viewModel.MainViewModel
+import com.soulje.historyscreen.HistoryActivity
+import com.soulje.historyscreen.HistoryInteractor
 import com.soulje.model.DataModel
 import com.soulje.repository.datasource.RetrofitImplementation
 import com.soulje.repository.datasource.RoomDataBaseImplementation
@@ -35,6 +38,15 @@ val appModule = module {
         )
     }
 
+    scope(named("MAIN_SCOPE")) {
+        scoped { MainInteractor(get(), get()) }
+        viewModel { MainViewModel(get()) }
+    }
+
+    scope(named("HISTORY_SCOPE")) {
+        scoped { HistoryInteractor(get(), get()) }
+        viewModel { com.soulje.historyscreen.HistoryViewModel(get()) }
+    }
 
 
 
@@ -46,7 +58,7 @@ val appModule = module {
     }
 
     single(named("history")){
-        com.soulje.historyscreen.HistoryInteractor(
+        HistoryInteractor(
             repositoryRemote = get(),
             repositoryLocal = get()
         )

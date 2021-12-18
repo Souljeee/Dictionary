@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.soulje.dictionary.R
 import com.soulje.dictionary.SearchDialogFragment
 import com.soulje.dictionary.databinding.ActivityMainBinding
@@ -19,14 +20,23 @@ import com.soulje.dictionary.view.details.DetailsActivity
 import com.soulje.historyscreen.HistoryActivity
 import com.soulje.dictionary.view.main.adapter.MainAdapter
 import com.soulje.dictionary.viewModel.MainViewModel
+import com.soulje.utils.viewById
+import org.koin.android.ext.android.getKoin
+import org.koin.androidx.scope.currentScope
+import org.koin.androidx.scope.lifecycleScope
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.scope.getViewModel
 import org.koin.core.qualifier.named
 
 class MainActivity : com.soulje.core.BaseActivity<com.soulje.core.AppState>() {
 
     private lateinit var binding: ActivityMainBinding
 
-    override val model: MainViewModel by viewModel(named("main"))
+    private val myScope  by lazy { getKoin().createScope("myScope", named("MAIN_SCOPE")) }
+
+    override val model: MainViewModel by lazy { myScope.get() }
+
+    private val fab by viewById<FloatingActionButton>(R.id.search_fab)
 
     private lateinit var answer : String
 
@@ -45,7 +55,7 @@ class MainActivity : com.soulje.core.BaseActivity<com.soulje.core.AppState>() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         model.subscribe().observe(this@MainActivity, Observer<com.soulje.core.AppState> { renderData(it) })
-        binding.searchFab.setOnClickListener {
+        fab.setOnClickListener {
             val searchDialogFragment = SearchDialogFragment.newInstance()
             searchDialogFragment.setOnSearchClickListener(object :
                 SearchDialogFragment.OnSearchClickListener {
@@ -128,6 +138,11 @@ class MainActivity : com.soulje.core.BaseActivity<com.soulje.core.AppState>() {
         mainActivityRecyclerview.adapter = adapter
         mainActivityRecyclerview.setHasFixedSize(true)
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        myScope.close()
     }
 
 }

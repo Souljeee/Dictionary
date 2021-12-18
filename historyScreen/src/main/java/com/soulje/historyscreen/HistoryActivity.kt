@@ -7,13 +7,17 @@ import com.soulje.core.AppState
 import com.soulje.core.BaseActivity
 
 import com.soulje.historyscreen.databinding.ActivityHistoryBinding
+import org.koin.android.ext.android.getKoin
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.qualifier.named
 
 class HistoryActivity : BaseActivity<AppState>() {
 
     private lateinit var binding: ActivityHistoryBinding
-    override lateinit var model: HistoryViewModel
+
+    private val myScope  = getKoin().createScope("historyScope", named("HISTORY_SCOPE"))
+    override val model: HistoryViewModel = myScope.get()
+
     private val adapter: HistoryAdapter by lazy { HistoryAdapter() }
 
     protected fun renderData(appState: com.soulje.core.AppState) {
@@ -59,12 +63,15 @@ class HistoryActivity : BaseActivity<AppState>() {
         if (binding.historyActivityRecyclerview.adapter != null) {
             throw IllegalStateException("The ViewModel should be initialised first")
         }
-        val viewModel: HistoryViewModel by viewModel(named("history"))
-        model = viewModel
         model.subscribe().observe(this@HistoryActivity, Observer<com.soulje.core.AppState> { renderData(it) })
     }
 
     private fun initViews() {
         binding.historyActivityRecyclerview.adapter = adapter
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        myScope.close()
     }
 }
